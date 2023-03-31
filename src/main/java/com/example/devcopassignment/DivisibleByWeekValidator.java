@@ -7,7 +7,7 @@ import org.hibernate.validator.constraintvalidation.HibernateConstraintValidator
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleByOneWeek, BigDecimal> {
+public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleByOneWeek, String> {
 
     //private int numberOfWeeks;
 
@@ -17,7 +17,7 @@ public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleBy
     }
 
     @Override
-    public boolean isValid(BigDecimal amount, ConstraintValidatorContext context) {
+    public boolean isValid(String amount, ConstraintValidatorContext context) {
         if (amount == null) {
             return true;
         }
@@ -37,7 +37,7 @@ public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleBy
 
         switch (frequency) {
             case WEEK:
-                weeklyAmount = amount;
+                weeklyAmount = new BigDecimal(amount);
                 break;
 
             case TWO_WEEK:
@@ -64,7 +64,7 @@ public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleBy
 
         if (weeklyAmount == null) {
             //Calculate the weekly amount if needed
-            BigDecimal totalAmount = amount;
+            BigDecimal totalAmount = new BigDecimal(amount);
             weeklyAmount = totalAmount.divide(new BigDecimal(weeks), 2, RoundingMode.DOWN);
         }
 
