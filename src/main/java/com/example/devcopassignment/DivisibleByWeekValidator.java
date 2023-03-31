@@ -2,11 +2,12 @@ package com.example.devcopassignment;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import org.hibernate.validator.constraintvalidation.HibernateConstraintValidatorContext;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleByOneWeek, RegularAmount> {
+public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleByOneWeek, BigDecimal> {
 
     //private int numberOfWeeks;
 
@@ -16,26 +17,27 @@ public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleBy
     }
 
     @Override
-    public boolean isValid(RegularAmount regularAmount, ConstraintValidatorContext context) {
-        if (regularAmount == null || regularAmount.getFrequency() == null) {
+    public boolean isValid(BigDecimal amount, ConstraintValidatorContext context) {
+        if (amount == null) {
             return true;
         }
-
-        //check if frequency is a multiple of a week
-        Frequency frequency = regularAmount.getFrequency();
-        String amount = regularAmount.getAmount();
-        if (amount == null || amount.isEmpty()) {
-            return true;
-        }
-
-
 
         BigDecimal weeklyAmount = null;
         int weeks = 1;
 
+        // determine the number of weeks based on the frequency
+        Frequency frequency = Frequency.WEEK; // default value
+        if (context instanceof HibernateConstraintValidatorContext) {
+            HibernateConstraintValidatorContext hibernateContext = (HibernateConstraintValidatorContext) context;
+            Object parent = hibernateContext.getDefaultConstraintMessageTemplate();
+            if (parent instanceof RegularAmount) {
+                frequency = ((RegularAmount) parent).getFrequency();
+            }
+        }
+
         switch (frequency) {
             case WEEK:
-                weeklyAmount = new BigDecimal(amount);
+                weeklyAmount = amount;
                 break;
 
             case TWO_WEEK:
@@ -62,7 +64,7 @@ public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleBy
 
         if (weeklyAmount == null) {
             //Calculate the weekly amount if needed
-            BigDecimal totalAmount = new BigDecimal(amount);
+            BigDecimal totalAmount = amount;
             weeklyAmount = totalAmount.divide(new BigDecimal(weeks), 2, RoundingMode.DOWN);
         }
 
@@ -72,8 +74,6 @@ public class DivisibleByWeekValidator implements ConstraintValidator<DivisibleBy
         return weeklyAmount.multiply(new BigDecimal(100)).remainder(BigDecimal.ONE).compareTo(BigDecimal.ZERO) == 0;
     }
 }
-
-
 
 
 
